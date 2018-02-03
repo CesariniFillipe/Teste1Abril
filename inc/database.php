@@ -1,0 +1,163 @@
+<?php				
+mysqli_report(MYSQLI_REPORT_STRICT);				
+function open_database() {			
+	try {				
+		$conn = new mysqli(DB_HOST, DB_USER, DB_PASSWORD, DB_NAME);				
+		return $conn;			
+	} catch (Exception $e) {				
+		echo $e->getMessage();				
+		return null;			
+	}		
+}				
+function close_database($conn) {			
+	try {				
+		mysqli_close($conn);			
+	} catch (Exception $e) {				
+		echo $e->getMessage();			
+	}		
+}				
+/**		 *  Pesquisa um Registro pelo ID em uma Tabela		 */		
+function find( $table = null, $id = null ) {		  			
+	$database = open_database();			
+	$found = null;					
+	try {			  
+		if ($id) {			    
+			$sql = "SELECT * FROM " . $table . " WHERE id = " . $id;			    $result = $database->query($sql);			    			    
+			if ($result->num_rows > 0) {			      
+				$found = $result->fetch_assoc();			    
+			}			    			  
+		} else {			    			    
+			$sql = "SELECT * FROM " . $table;			    
+			$result = $database->query($sql);			    			    
+			if ($result->num_rows > 0) {			      
+				$found = $result->fetch_all(MYSQLI_ASSOC);
+			}			  
+		}			
+	} catch (Exception $e) {			  
+		$_SESSION['message'] = $e->GetMessage();			  
+		$_SESSION['type'] = 'danger';		  
+	}						
+	close_database($database);			
+	return $found;		
+}
+
+/**		 *  Pesquisa Todos os Registros de uma Tabela		 */		
+function find_all( $table ) {		  
+	return find($table);		
+}		
+
+/**		*  Insere um registro no BD		*/		
+function save($table = null, $data = null) {				  
+	$database = open_database();				  
+	$columns = null;		  
+	$values = null;				  
+//print_r($data);				  
+	foreach ($data as $key => $value) {		    
+		$columns .= trim($key, "'") . ",";		    
+		$values .= "'$value',";		  }				  
+// remove a ultima virgula		  
+		$columns = rtrim($columns, ',');		  
+		$values = rtrim($values, ',');		  		  
+		$sql = "INSERT INTO " . $table . "($columns)" . " VALUES " . "($values);";				  
+		try {		    
+			$database->query($sql);				    
+			$_SESSION['message'] = 'Registro cadastrado com sucesso.';		    
+			$_SESSION['type'] = 'success';		  		  
+		} catch (Exception $e) { 		  		    
+			$_SESSION['message'] = 'Nao foi possivel realizar a operacao.';		    
+			$_SESSION['type'] = 'danger';		  
+		} 				  
+		close_database($database);		
+	}
+
+	/**		 *  Atualiza um registro em uma tabela, por ID		 */		
+	function update($table = null, $id = 0, $data = null) {				  
+		$database = open_database();				  
+		$items = null;				  
+		foreach ($data as $key => $value) {		    
+			$items .= trim($key, "'") . "='$value',";		  
+		}				  
+// remove a ultima virgula		  
+		$items = rtrim($items, ',');				  
+		$sql  = "UPDATE " . $table;		  
+		$sql .= " SET $items";		  
+		$sql .= " WHERE id=" . $id . ";";				  
+		try {		    
+			$database->query($sql);				    
+			$_SESSION['message'] = 'Registro atualizado com sucesso.';		    
+			$_SESSION['type'] = 'success';				  
+		} catch (Exception $e) { 				    
+			$_SESSION['message'] = 'Nao foi possivel realizar a operacao.';		    
+			$_SESSION['type'] = 'danger';		  
+		} 				  
+		close_database($database);		
+	}
+	
+	/**		 *  Remove uma linha de uma tabela pelo ID do registro		 */		
+	function remove( $table = null, $id = null ) {				  
+		$database = open_database();					  
+		try {		    
+			if ($id) {				      
+				$sql = "DELETE FROM " . $table . " WHERE id = " . $id;		      
+				$result = $database->query($sql);				      
+				if ($result = $database->query($sql)) {   			        
+					$_SESSION['message'] = "Registro Removido com Sucesso.";		        
+					$_SESSION['type'] = 'success';		      
+				}		    
+			}		  
+		} catch (Exception $e) { 				    
+			$_SESSION['message'] = $e->GetMessage();		    
+			$_SESSION['type'] = 'danger';		  
+		}				  
+		close_database($database);		
+	}
+
+	function autentica($email = 'email', $senha='senha'){
+		$data = open_database();
+		try{
+			$sql = mysqli_query($data, "SELECT * FROM usuarios WHERE email = $email and senha = $senha") or die(mysqli_error($data));
+			$row = mysqli_num_rows($sql);
+			if($row>0){
+				session_start();
+				$_SESSION['email']=$email;
+				$_SESSION['senha']=$senha;
+				echo "<meta HTTP-EQUIV='Refresh' CONTENT='0;URL=home.php'>";
+			}else{
+				echo "<meta HTTP-EQUIV='Refresh' CONTENT='0;URL=login.php'>";
+			}
+		}catch (Exception $e) { 				    
+			$_SESSION['message'] = $e->GetMessage();		    
+			$_SESSION['type'] = 'danger';		  
+		}				  
+		close_database($data);		
+	}
+
+	function listProdutos(){
+		$data = open_database();
+		$query = mysqli_query($data, "SELECT * FROM produto ORDER BY nome") or die("Erro na consulta");
+		return $query;
+	}
+
+	function listClientes(){
+		$data = open_database();
+		$query = mysqli_query($data, "SELECT * FROM cliente ORDER BY nome") or die("Erro na consulta");
+		return $query;
+	}
+
+	function showProduto($ID = 'id'){
+		$data = open_database();
+		$query = mysqli_query($data, "SELECT * FROM produto WHERE id = $ID") or die("Erro na consulta");
+		return $query;
+	}
+
+	function showCliente($ID = 'id'){
+		$data = open_database();
+		$query = mysqli_query($data, "SELECT * FROM cliente WHERE id = $ID") or die("Erro na consulta");
+		return $query;
+	}
+
+	function showFornecedor($ID = 'id'){
+		$data = open_database();
+		$query = mysqli_query($data, "SELECT * FROM fornecedor WHERE id = $ID") or die("Erro na consulta");
+		return $query;
+	}
