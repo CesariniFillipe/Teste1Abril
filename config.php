@@ -12,7 +12,7 @@ if ( !defined('ABSPATH') )
 	define('ABSPATH', dirname(__FILE__) . '/');					
 /** caminho no server para o sistema **/		
 if ( !defined('BASEURL') )			
-	define('BASEURL', '/estoque/');					
+	define('BASEURL', '/Teste1Abril/');					
 /** caminho do arquivo de banco de dados **/		
 if ( !defined('DBAPI') )			
 	define('DBAPI', ABSPATH . 'inc/database.php');
